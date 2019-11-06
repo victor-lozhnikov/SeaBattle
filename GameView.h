@@ -9,6 +9,7 @@ public:
     void clearScreen();
     void printField (const Gamer &gamer, bool enemy = false);
     void setShips (Gamer gamer);
+    void startScreen();
 };
 
 
