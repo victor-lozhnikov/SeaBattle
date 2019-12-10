@@ -17,6 +17,15 @@ Gamer::Gamer() {
     field.assign(12, std::vector<int> (12, 0));
     shipCount.assign(4, 0);
     shipAvailable = {4, 3, 2, 1};
+    winCount = 0;
+}
+
+int Gamer::getWinCount() const {
+    return winCount;
+}
+
+void Gamer::addWin() {
+    winCount++;
 }
 
 std::string Gamer::getName() const {
@@ -188,6 +197,64 @@ void Gamer::randomSetShips() {
     }
 }
 
+void Gamer::smartSetShips() {
+    srand(time(nullptr));
+    for (int i = 3; i > 0; --i) {
+        for (int j = shipCount[i]; j < shipAvailable[i]; ++j) {
+            bool ok = false;
+            while (!ok) {
+                int s1, s2;
+                s1 = rand() % 4;
+                s2 = rand() % (10 - i);
+                std::string start, end;
+                if (s1 == 0) {
+                    start += 'a';
+                    start += (char)(s2 + '0');
+                    end += 'a';
+                    end += (char)(s2 + i + '0');
+                }
+                else if (s1 == 1) {
+                    start += 'j';
+                    start += (char)(s2 + '0');
+                    end += 'j';
+                    end += (char)(s2 + i + '0');
+                }
+                else if (s1 == 2) {
+                    start += (char)(s2 + 'a');
+                    start += '0';
+                    end += (char)(s2 + i + 'a');
+                    end += '0';
+                }
+                else {
+                    start += (char)(s2 + 'a');
+                    start += '9';
+                    end += (char)(s2 + i + 'a');
+                    end += '9';
+                }
+
+                if (addShip(start, end)) {
+                    ok = true;
+                }
+            }
+        }
+    }
+    for (int j = shipCount[0]; j < shipAvailable[0]; ++j) {
+        bool ok = false;
+        while (!ok) {
+            int s1, s2;
+            s1 = rand() % 10;
+            s2 = rand() % 10;
+            std::string start;
+            start += (char)(s1 + 'a');
+            start += (char)(s2 + '0');
+
+            if (addShip(start, start)) {
+                ok = true;
+            }
+        }
+    }
+}
+
 std::vector <std::pair <int, int>> Gamer::getShipByCoord(std::pair<int, int> coords) {
     for (auto &i : ships) {
         for (auto &j : i) {
@@ -254,5 +321,69 @@ bool Gamer::randomMove(int* sx, int* sy) {
         }
         ok = true;
     }
+    return (shotRes == 1);
+}
+
+bool Gamer::smartMove(int *sx, int *sy) {
+    bool notKilled = false;
+    std::vector <std::pair <int, int>> coordsToKill;
+    for (int i = 1; i <= 10; ++i) {
+        for (int j = 1; j <= 10; ++j) {
+            if (field[i][j] == 3) {
+                notKilled = true;
+                coordsToKill.emplace_back(std::make_pair(i, j));
+            }
+        }
+    }
+    if (!notKilled) {
+        return randomMove(sx, sy);
+    }
+
+    int x = coordsToKill[0].first;
+    int y = coordsToKill[0].second;
+    std::string s;
+
+    if (coordsToKill.size() == 1) {
+        if (field[x-1][y] < 2 && x > 1) {
+            s += (char)(y - 1 + 'a');
+            s += (char)(x - 2 + '0');
+        }
+        else if (field[x+1][y] < 2 && x < 10) {
+            s += (char)(y - 1 + 'a');
+            s += (char)(x + '0');
+        }
+        else if (field[x][y-1] < 2 && y > 1) {
+            s += (char)(y - 2 + 'a');
+            s += (char)(x - 1 + '0');
+        }
+        else if (field[x][y+1] < 2 && y < 10) {
+            s += (char)(y + 'a');
+            s += (char)(x - 1 + '0');
+        }
+        int shotRes = shot(s, sx, sy);
+        return (shotRes == 1);
+    }
+
+    if (coordsToKill[0].first == coordsToKill[1].first) {
+        if (field[x][y-1] < 2 && y > 1) {
+            s += (char)(y - 2 + 'a');
+        }
+        else {
+            int y1 = coordsToKill.back().second;
+            s += (char)(y1 + 'a');
+        }
+        s += (char)(x - 1 + '0');
+    }
+    else {
+        s += (char)(y - 1 + 'a');
+        if (field[x-1][y] < 2 && x > 1) {
+            s += (char)(x - 2 + '0');
+        }
+        else {
+            int x1 = coordsToKill.back().first;
+            s += (char)(x1 + '0');
+        }
+    }
+    int shotRes = shot(s, sx, sy);
     return (shotRes == 1);
 }

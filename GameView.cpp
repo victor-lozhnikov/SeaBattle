@@ -2,7 +2,9 @@
 #include <sstream>
 #include "GameView.h"
 #include "MultiPlayer.h"
-#include "RandomBot.h"
+#include "RandomPlay.h"
+#include "SmartPlay.h"
+#include "optionparser.h"
 
 /*
  -1 - недоступна для расстановки
@@ -34,23 +36,22 @@ void GameView::startScreen() {
             continue;
         }
         gameView.clearScreen();
-        MultiPlayer multiPlayer(gameView);
-        RandomBot randomBot(gameView);
-        switch (type[0]) {
-            case '1':
-                multiPlayer.gameProccess();
-                isStarted = true;
-                break;
-            case '2':
-                randomBot.gameProccess();
-                isStarted = true;
-                break;
-            case '3':
-                std::cout << "Выбран тип 3";
-                isStarted = true;
-                break;
-            default:
-                break;
+
+
+        if (type[0] == '1') {
+            MultiPlayer multiPlayer(gameView);
+            multiPlayer.gameProccess();
+            isStarted = true;
+        }
+        else if (type[0] == '2') {
+            RandomPlay randomPlay(gameView);
+            randomPlay.gameProccess();
+            isStarted = true;
+        }
+        else if (type[0] == '3') {
+            SmartPlay smartPlay(gameView);
+            smartPlay.gameProccess();
+            isStarted = true;
         }
     }
 }
@@ -68,6 +69,9 @@ void GameView::printField(const Gamer &gamer, bool enemy, int cur_x, int cur_y) 
             if (i == cur_x && j == cur_y) {
                 std::cout << "\x1b[1;33m";
             }
+            else if (field[i][j] > 2) {
+                std::cout << "\x1b[1;34m";
+            }
             if (field[i][j] < 1) {
                 std::cout << '.';
             }
@@ -83,7 +87,7 @@ void GameView::printField(const Gamer &gamer, bool enemy, int cur_x, int cur_y) 
             else {
                 std::cout << '.';
             }
-            if (i == cur_x && j == cur_y) {
+            if ((i == cur_x && j == cur_y) || field[i][j] > 2) {
                 std::cout << "\x1b[0m";
             }
             //std::cout << field[i][j];
@@ -93,16 +97,16 @@ void GameView::printField(const Gamer &gamer, bool enemy, int cur_x, int cur_y) 
     }
 }
 
-void GameView::setShips(Gamer* gamer) {
-    while (!gamer->isReady()) {
+void GameView::setShips(Gamer &gamer) {
+    while (!gamer.isReady()) {
         clearScreen();
-        std::cout << "Игрок " << gamer->getName() << " расставляет корабли.\n\n";
-        printField(*gamer);
+        std::cout << "Игрок " << gamer.getName() << " расставляет корабли.\n\n";
+        printField(gamer);
         std::cout << "\nВам доступны следующие корабли:\n"
-                     "oooo - " << gamer->getAvailableShips(4) << " шт.\n"
-                     "ooo  - " << gamer->getAvailableShips(3) << " шт.\n"
-                     "oo   - " << gamer->getAvailableShips(2) << " шт.\n"
-                     "o    - " << gamer->getAvailableShips(1) << " шт.\n";
+                     "oooo - " << gamer.getAvailableShips(4) << " шт.\n"
+                     "ooo  - " << gamer.getAvailableShips(3) << " шт.\n"
+                     "oo   - " << gamer.getAvailableShips(2) << " шт.\n"
+                     "o    - " << gamer.getAvailableShips(1) << " шт.\n";
         std::cout << "\nВведите начальную и конечную координаты вашего корабля "
                      "(например: \"g5 g7\")\n"
                      "Если вы хотите сбросить расстановку кораблей, введите \"r\"\n"
@@ -121,28 +125,28 @@ void GameView::setShips(Gamer* gamer) {
         else if (inpVector.size() == 1) {
             inp[0] = tolower(inp[0]);
             if (inp[0] == 'r') {
-                gamer->removeAll();
+                gamer.removeAll();
             }
             if (inp[0] == 'g') {
-                gamer->randomSetShips();
+                gamer.randomSetShips();
             }
             else {
-                gamer->addShip(inpVector[0], inpVector[0]);
+                gamer.addShip(inpVector[0], inpVector[0]);
             }
         }
         else {
-            gamer->addShip(inpVector[0], inpVector[1]);
+            gamer.addShip(inpVector[0], inpVector[1]);
         }
 
-        if (!gamer->isReady()) {
+        if (!gamer.isReady()) {
             continue;
         }
 
         bool ok = false;
         while (!ok) {
             clearScreen();
-            std::cout << "Игрок " << gamer->getName() << " расставляет корабли.\n\n";
-            printField(*gamer);
+            std::cout << "Игрок " << gamer.getName() << " расставляет корабли.\n\n";
+            printField(gamer);
             std::cout << "\nЕсли вас устраивает данная расстановка, введите \"y\"\n"
                          "Если вы хотите сбросить расстановку кораблей, введите \"r\"\n"
                          "Если вы хотите расставить корабли случайным образом, нажмите \"g\"\n";
@@ -153,12 +157,12 @@ void GameView::setShips(Gamer* gamer) {
                     ok = true;
                 }
                 if (inp[0] == 'r') {
-                    gamer->removeAll();
+                    gamer.removeAll();
                     ok = true;
                 }
                 if (inp[0] == 'g') {
-                    gamer->removeAll();
-                    gamer->randomSetShips();
+                    gamer.removeAll();
+                    gamer.randomSetShips();
                 }
             }
         }
@@ -205,6 +209,41 @@ bool GameView::randomMove(Gamer &cur, Gamer &enemy) {
     return shotRes;
 }
 
-void GameView::printWinner(const Gamer &winner) {
-    std::cout << "Игрок " << winner.getName() << " победил!";
+bool GameView::smartMove(Gamer &cur, Gamer &enemy) {
+    clearScreen();
+    std::cout << "Ходит игрок " << cur.getName() << "\n\n";
+    int x, y;
+    bool shotRes = enemy.smartMove(&x, &y);
+    printField(enemy, true, x, y);
+    std::cout << "\nНажмите ENTER\n";
+    std::cin.get();
+    return shotRes;
+}
+
+bool GameView::printWinner(const Gamer &winner, const Gamer &loser) {
+    while (true) {
+        clearScreen();
+        std::cout << "Игрок " << winner.getName() << " победил!\n\n";
+        std::cout << "Количество побед:\n";
+        if (loser.getWinCount() > winner.getWinCount()) {
+            std::cout << loser.getName() << " : " << loser.getWinCount() << "\n";
+            std::cout << winner.getName() << " : " << winner.getWinCount() << "\n";
+        } else {
+            std::cout << winner.getName() << " : " << winner.getWinCount() << "\n";
+            std::cout << loser.getName() << " : " << loser.getWinCount() << "\n";
+        }
+        std::cout << "\nХотите сыграть еще раз?\n"
+                     "Введите \"y\", если да, \"n\", если нет.\n";
+        std::string inp;
+        getline(std::cin, inp);
+        if (inp.size() == 1) {
+            inp[0] = tolower(inp[0]);
+            if (inp[0] == 'y') {
+                return true;
+            }
+            if (inp[0] == 'n') {
+                return false;
+            }
+        }
+    }
 }

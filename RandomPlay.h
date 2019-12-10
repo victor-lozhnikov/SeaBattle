@@ -1,13 +1,13 @@
-#ifndef SEABATTLE_RANDOMBOT_H
-#define SEABATTLE_RANDOMBOT_H
+#ifndef SEABATTLE_RANDOMPLAY_H
+#define SEABATTLE_RANDOMPLAY_H
 
 
 #include "Gamer.h"
 #include "GameView.h"
 
-class RandomBot {
+class RandomPlay {
 public:
-    RandomBot(GameView &_gameView);
+    RandomPlay(GameView &_gameView);
     void selectName();
     void gameProccess();
 
@@ -18,4 +18,4 @@ private:
 };
 
 
-#endif //SEABATTLE_RANDOMBOT_H
+#endif //SEABATTLE_RANDOMPLAY_H
