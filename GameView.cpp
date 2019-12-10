@@ -2,6 +2,7 @@
 #include <sstream>
 #include "GameView.h"
 #include "MultiPlayer.h"
+#include "RandomBot.h"
 
 /*
  -1 - недоступна для расстановки
@@ -34,13 +35,14 @@ void GameView::startScreen() {
         }
         gameView.clearScreen();
         MultiPlayer multiPlayer(gameView);
+        RandomBot randomBot(gameView);
         switch (type[0]) {
             case '1':
                 multiPlayer.gameProccess();
                 isStarted = true;
                 break;
             case '2':
-                std::cout << "Выбран тип 2";
+                randomBot.gameProccess();
                 isStarted = true;
                 break;
             case '3':
@@ -53,7 +55,7 @@ void GameView::startScreen() {
     }
 }
 
-void GameView::printField(const Gamer &gamer, bool enemy) {
+void GameView::printField(const Gamer &gamer, bool enemy, int cur_x, int cur_y) {
     auto field = gamer.getField();
     std::cout << "   ";
     for (int i = 0; i < 10; ++i) {
@@ -63,6 +65,9 @@ void GameView::printField(const Gamer &gamer, bool enemy) {
     for (int i = 1; i <= 10; ++i) {
         std::cout << i - 1 << "  ";
         for (int j = 1; j <= 10; ++j) {
+            if (i == cur_x && j == cur_y) {
+                std::cout << "\x1b[1;33m";
+            }
             if (field[i][j] < 1) {
                 std::cout << '.';
             }
@@ -77,6 +82,9 @@ void GameView::printField(const Gamer &gamer, bool enemy) {
             }
             else {
                 std::cout << '.';
+            }
+            if (i == cur_x && j == cur_y) {
+                std::cout << "\x1b[0m";
             }
             //std::cout << field[i][j];
             std::cout << " ";
@@ -157,13 +165,14 @@ void GameView::setShips(Gamer* gamer) {
     }
 }
 
-bool GameView::move (Gamer* cur, Gamer* enemy) {
+bool GameView::move (Gamer &cur, Gamer &enemy) {
     bool ok = false;
     int shotRes = -1;
+    int x, y;
     while (!ok) {
         clearScreen();
-        std::cout << "Ходит игрок " << cur->getName() << "\n\n";
-        printField(*enemy, true);
+        std::cout << "Ходит игрок " << cur.getName() << "\n\n";
+        printField(enemy, true);
         std::cout << "\nВведите координаты точки, в которую вы хотите выстрелить (например \"g5\")\n";
         std::string inp;
         getline(std::cin, inp);
@@ -171,18 +180,29 @@ bool GameView::move (Gamer* cur, Gamer* enemy) {
             continue;
         }
         inp[0] = tolower(inp[0]);
-        shotRes = enemy->shot(inp);
+        shotRes = enemy.shot(inp, &x, &y);
         if (shotRes == -1) {
             continue;
         }
         clearScreen();
-        std::cout << "Ходит игрок " << cur->getName() << "\n\n";
-        printField(*enemy, true);
+        std::cout << "Ходит игрок " << cur.getName() << "\n\n";
+        printField(enemy, true, x, y);
         std::cout << "\nНажмите ENTER\n";
         std::cin.get();
         ok = true;
     }
     return (shotRes == 1);
+}
+
+bool GameView::randomMove(Gamer &cur, Gamer &enemy) {
+    clearScreen();
+    std::cout << "Ходит игрок " << cur.getName() << "\n\n";
+    int x, y;
+    bool shotRes = enemy.randomMove(&x, &y);
+    printField(enemy, true, x, y);
+    std::cout << "\nНажмите ENTER\n";
+    std::cin.get();
+    return shotRes;
 }
 
 void GameView::printWinner(const Gamer &winner) {

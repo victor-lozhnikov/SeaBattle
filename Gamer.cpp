@@ -126,17 +126,6 @@ bool Gamer::isReady() {
     return true;
 }
 
-bool Gamer::checkPoint(const int &i, const int &j) {
-    for (int ii = -1; ii <= 1; ++ii) {
-        for (int jj = -1; jj <= 1; ++jj) {
-            if (field[i + ii][j + jj] == 1) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
 void Gamer::markNeighbours(const int &i, const int &j) {
     for (int ii = -1; ii <= 1; ++ii) {
         for (int jj = -1; jj <= 1; ++jj) {
@@ -215,7 +204,7 @@ std::vector <std::pair <int, int>> Gamer::getShipByCoord(std::pair<int, int> coo
 0 - промах
 1 - попал
 */
-int Gamer::shot(std::string s) {
+int Gamer::shot(std::string s, int* sx, int* sy) {
     int y = s[0] - 'a' + 1;
     int x = s[1] - '0' + 1;
     if (x < 1 || x > 10 || y < 1 || y > 10) {
@@ -225,6 +214,8 @@ int Gamer::shot(std::string s) {
         return -1;
     }
     field[x][y] = std::max(2, field[x][y] + 2);
+    *sx = x;
+    *sy = y;
     if (field[x][y] != 3) {
         return 0;
     }
@@ -245,4 +236,23 @@ int Gamer::shot(std::string s) {
         field[i.first][i.second] = 4;
     }
     return 1;
+}
+
+bool Gamer::randomMove(int* sx, int* sy) {
+    srand(time(nullptr));
+    bool ok = false;
+    int shotRes = -1;
+    while (!ok) {
+        int x = rand() % 10;
+        int y = rand() % 10;
+        std::string s;
+        s += (char)(x + 'a');
+        s += (char)(y + '0');
+        shotRes = shot(s, sx, sy);
+        if (shotRes == -1) {
+            continue;
+        }
+        ok = true;
+    }
+    return (shotRes == 1);
 }

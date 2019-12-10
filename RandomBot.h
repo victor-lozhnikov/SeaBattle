@@ -1,13 +1,20 @@
-//
-// Created by victor on 10.12.19.
-//
-
 #ifndef SEABATTLE_RANDOMBOT_H
 #define SEABATTLE_RANDOMBOT_H
 
 
-class RandomBot {
+#include "Gamer.h"
+#include "GameView.h"
 
+class RandomBot {
+public:
+    RandomBot(GameView &_gameView);
+    void selectName();
+    void gameProccess();
+
+private:
+    GameView gameView;
+    Gamer gamer;
+    Gamer bot;
 };
 
 

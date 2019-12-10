@@ -6,7 +6,7 @@
 
 class MultiPlayer {
 public:
-    explicit MultiPlayer(GameView _gameView);
+    explicit MultiPlayer(GameView &_gameView);
     void gameProccess();
     void selectNames();
 

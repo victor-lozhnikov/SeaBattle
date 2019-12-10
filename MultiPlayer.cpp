@@ -44,7 +44,7 @@ void MultiPlayer::gameProccess() {
             enemy = &gamer1;
         }
 
-        move = (move + !gameView.move(cur, enemy)) % 2;
+        move = (move + !gameView.move(*cur, *enemy)) % 2;
     }
 
     if (!gamer1.isKilled()) {
@@ -56,6 +56,6 @@ void MultiPlayer::gameProccess() {
     }
 }
 
-MultiPlayer::MultiPlayer(GameView _gameView) {
+MultiPlayer::MultiPlayer(GameView &_gameView) {
     gameView = _gameView;
 }

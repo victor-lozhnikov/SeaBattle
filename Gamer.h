@@ -12,15 +12,15 @@ public:
     std::vector<std::vector<int>> getField () const;
     bool addShip (std::string start, std::string end);
     bool isReady();
-    bool checkPoint (const int &i, const int &j);
     void markNeighbours(const int &i, const int &j);
     void markKilledShipNeighbours (std::vector<std::pair <int, int>> &ship);
     int getAvailableShips(int shipLen);
     void removeAll();
     void randomSetShips ();
     bool isKilled ();
-    int shot (std::string s);
+    int shot (std::string s, int* sx, int* sy);
     std::vector <std::pair <int, int>> getShipByCoord (std::pair <int, int>);
+    bool randomMove(int* sx, int* sy);
 
 private:
     std::string name;
