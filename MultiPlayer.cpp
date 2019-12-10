@@ -29,9 +29,31 @@ void MultiPlayer::selectNames() {
 
 void MultiPlayer::gameProccess() {
     selectNames();
-    gameView.setShips(gamer1);
-    gameView.setShips(gamer2);
+    gameView.setShips(&gamer1);
+    gameView.setShips(&gamer2);
+    int move = 0;
+    Gamer* cur;
+    Gamer* enemy;
+    while (!gamer1.isKilled() && !gamer2.isKilled()) {
+        if (move == 0) {
+            cur = &gamer1;
+            enemy = &gamer2;
+        }
+        else {
+            cur = &gamer2;
+            enemy = &gamer1;
+        }
 
+        move = (move + !gameView.move(cur, enemy)) % 2;
+    }
+
+    if (!gamer1.isKilled()) {
+        gameView.printWinner(gamer1);
+    }
+    else {
+        gameView.printWinner(gamer2);
+
+    }
 }
 
 MultiPlayer::MultiPlayer(GameView _gameView) {

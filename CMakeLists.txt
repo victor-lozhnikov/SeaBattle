@@ -3,4 +3,4 @@ project(SeaBattle)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(SeaBattle main.cpp Gamer.cpp Gamer.h GameView.cpp GameView.h MultiPlayer.cpp MultiPlayer.h)
+add_executable(SeaBattle main.cpp Gamer.cpp Gamer.h GameView.cpp GameView.h MultiPlayer.cpp MultiPlayer.h RandomBot.cpp RandomBot.h)

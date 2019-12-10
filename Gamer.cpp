@@ -4,18 +4,38 @@
 #include <cstdlib>
 #include "Gamer.h"
 
+/*
+ -1 - недоступна для расстановки
+ 0 - пустая
+ 1 - занята кораблем
+ 2 - прострелена
+ 3 - простреленный корабль
+ 4 - убитый корабль
+*/
+
 Gamer::Gamer() {
     field.assign(12, std::vector<int> (12, 0));
     shipCount.assign(4, 0);
     shipAvailable = {4, 3, 2, 1};
 }
 
-std::string Gamer::getName() {
+std::string Gamer::getName() const {
     return name;
 }
 
 void Gamer::setName(const std::string &_name) {
     name = _name;
+}
+
+bool Gamer::isKilled() {
+    for (auto &i : field) {
+        for (auto &j : i) {
+            if (j == 1) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 std::vector<std::vector<int>> Gamer::getField() const {
@@ -38,6 +58,7 @@ bool Gamer::addShip(std::string start, std::string end) {
     }
 
     int shipLen;
+    std::vector <std::pair<int, int>> ship;
     if (start[0] == end[0]) {
         shipLen = abs(start[1] - end[1]);
         if (shipLen > 3) {
@@ -59,8 +80,10 @@ bool Gamer::addShip(std::string start, std::string end) {
         for (int i = start[1] - '0' + 1; i <= end[1] - '0' + 1; ++i) {
             field[i][y] = 1;
             markNeighbours(i, y);
+            ship.emplace_back(std::make_pair(i, y));
         }
         shipCount[shipLen]++;
+        ships.emplace_back(ship);
     }
     else if (start[1] == end[1]) {
         shipLen = abs(start[0] - end[0]);
@@ -82,9 +105,11 @@ bool Gamer::addShip(std::string start, std::string end) {
         }
         for (int i = start[0] - 'a' + 1; i <= end[0] - 'a' + 1; ++i) {
             field[x][i] = 1;
+            ship.emplace_back(std::make_pair(x, i));
             markNeighbours(x, i);
         }
         shipCount[shipLen]++;
+        ships.emplace_back(ship);
     }
     else {
         return false;
@@ -117,6 +142,18 @@ void Gamer::markNeighbours(const int &i, const int &j) {
         for (int jj = -1; jj <= 1; ++jj) {
             if (field[i + ii][j + jj] == 0) {
                 field[i + ii][j + jj] = -1;
+            }
+        }
+    }
+}
+
+void Gamer::markKilledShipNeighbours(std::vector<std::pair<int, int>> &ship) {
+    for (auto &i : ship) {
+        for (int ii = -1; ii <= 1; ++ii) {
+            for (int jj = -1; jj <= 1; ++jj) {
+                if (field[i.first + ii][i.second + jj] == -1) {
+                    field[i.first + ii][i.second + jj] = 2;
+                }
             }
         }
     }
@@ -160,4 +197,52 @@ void Gamer::randomSetShips() {
             }
         }
     }
+}
+
+std::vector <std::pair <int, int>> Gamer::getShipByCoord(std::pair<int, int> coords) {
+    for (auto &i : ships) {
+        for (auto &j : i) {
+            if (j == coords) {
+                return i;
+            }
+        }
+    }
+    return std::vector<std::pair<int, int>>();
+}
+
+/*
+-1 - некорректный ввод
+0 - промах
+1 - попал
+*/
+int Gamer::shot(std::string s) {
+    int y = s[0] - 'a' + 1;
+    int x = s[1] - '0' + 1;
+    if (x < 1 || x > 10 || y < 1 || y > 10) {
+        return -1;
+    }
+    if (field[x][y] > 1) {
+        return -1;
+    }
+    field[x][y] = std::max(2, field[x][y] + 2);
+    if (field[x][y] != 3) {
+        return 0;
+    }
+    std::vector <std::pair <int, int>> ship = getShipByCoord(std::make_pair(x, y));
+    bool killed = true;
+    for (auto &i : ship) {
+        if (field[i.first][i.second] != 3) {
+            killed = false;
+            break;
+        }
+    }
+
+    if (!killed) {
+        return 1;
+    }
+    markKilledShipNeighbours(ship);
+    for (auto &i : ship) {
+        field[i.first][i.second] = 4;
+    }
+    return 1;
 }

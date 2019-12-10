@@ -7,22 +7,27 @@
 class Gamer {
 public:
     Gamer();
-    std::string getName();
+    std::string getName() const;
     void setName(const std::string &_name);
     std::vector<std::vector<int>> getField () const;
     bool addShip (std::string start, std::string end);
     bool isReady();
     bool checkPoint (const int &i, const int &j);
     void markNeighbours(const int &i, const int &j);
+    void markKilledShipNeighbours (std::vector<std::pair <int, int>> &ship);
     int getAvailableShips(int shipLen);
     void removeAll();
     void randomSetShips ();
+    bool isKilled ();
+    int shot (std::string s);
+    std::vector <std::pair <int, int>> getShipByCoord (std::pair <int, int>);
 
 private:
     std::string name;
     std::vector<std::vector<int>> field;
     std::vector <int> shipCount;
     std::vector <int> shipAvailable;
+    std::vector <std::vector <std::pair <int, int>>> ships;
 };
 
 
