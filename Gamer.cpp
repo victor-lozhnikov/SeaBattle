@@ -321,12 +321,14 @@ int Gamer::shot(std::string s, int* sx, int* sy) {
 }
 
 bool Gamer::randomMove(int* sx, int* sy) {
-    srand(time(nullptr));
+    std::random_device rd;
+    std::mt19937 gen(rd());
     bool ok = false;
     int shotRes = -1;
     while (!ok) {
-        int x = rand() % 10;
-        int y = rand() % 10;
+        std::uniform_int_distribution<> dis(0, 9);
+        int x = dis(gen);
+        int y = dis(gen);
         std::string s;
         s += (char)(x + 'a');
         s += (char)(y + '0');
