@@ -6,25 +6,27 @@
 
 class Gamer {
 public:
-    Gamer();
+    explicit Gamer(int _order);
     std::string getName() const;
-    void setName(const std::string &_name);
     std::vector<std::vector<int>> getField () const;
-    bool addShip (std::string start, std::string end);
-    bool isReady();
-    void markNeighbours(const int &i, const int &j);
-    void markKilledShipNeighbours (std::vector<std::pair <int, int>> &ship);
-    int getAvailableShips(int shipLen);
+    bool isReady() const;
+    int getAvailableShips(int shipLen) const;
     void removeAll();
-    void randomSetShips ();
-    void smartSetShips ();
-    bool isKilled ();
-    int shot (std::string s, int* sx, int* sy);
-    std::vector <std::pair <int, int>> getShipByCoord (std::pair <int, int>);
-    bool randomMove(int* sx, int* sy);
-    bool smartMove(int* sx, int* sy);
     int getWinCount() const;
     void addWin();
+    int getOrder() const;
+    int shot (std::string s, int* sx, int* sy);
+    bool isKilled () const;
+    void setName(const std::string &_name);
+    bool addShip (std::string start, std::string end);
+    void randomSetShips ();
+    void smartSetShips ();
+    bool randomMove(int* sx, int* sy);
+    bool smartMove(int* sx, int* sy);
+
+    virtual void selectName() = 0;
+    virtual void setShips() = 0;
+    virtual bool move(Gamer &enemy) = 0;
 
 private:
     std::string name;
@@ -33,6 +35,10 @@ private:
     std::vector <int> shipAvailable;
     std::vector <std::vector <std::pair <int, int>>> ships;
     int winCount;
+    int order;
+    void markNeighbours(const int &i, const int &j);
+    void markKilledShipNeighbours (std::vector<std::pair <int, int>> &ship);
+    std::vector <std::pair <int, int>> getShipByCoord (std::pair <int, int>) const;
 };
 
 

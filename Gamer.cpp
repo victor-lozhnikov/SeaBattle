@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include <random>
 #include "Gamer.h"
 
 /*
@@ -13,7 +14,8 @@
  4 - убитый корабль
 */
 
-Gamer::Gamer() {
+Gamer::Gamer(int _order) {
+    order = _order;
     field.assign(12, std::vector<int> (12, 0));
     shipCount.assign(4, 0);
     shipAvailable = {4, 3, 2, 1};
@@ -22,6 +24,10 @@ Gamer::Gamer() {
 
 int Gamer::getWinCount() const {
     return winCount;
+}
+
+int Gamer::getOrder() const {
+    return order;
 }
 
 void Gamer::addWin() {
@@ -36,7 +42,7 @@ void Gamer::setName(const std::string &_name) {
     name = _name;
 }
 
-bool Gamer::isKilled() {
+bool Gamer::isKilled() const {
     for (auto &i : field) {
         for (auto &j : i) {
             if (j == 1) {
@@ -126,7 +132,7 @@ bool Gamer::addShip(std::string start, std::string end) {
     return true;
 }
 
-bool Gamer::isReady() {
+bool Gamer::isReady() const {
     for (int i = 0; i < 4; ++i) {
         if (shipCount[i] != shipAvailable[i]) {
             return false;
@@ -157,25 +163,29 @@ void Gamer::markKilledShipNeighbours(std::vector<std::pair<int, int>> &ship) {
     }
 }
 
-int Gamer::getAvailableShips(int shipLen) {
+int Gamer::getAvailableShips(int shipLen) const {
     return shipAvailable[shipLen - 1] - shipCount[shipLen - 1];
 }
 
 void Gamer::removeAll() {
     field.assign(12, std::vector<int> (12, 0));
     shipCount.assign(4, 0);
+    ships.clear();
 }
 
 void Gamer::randomSetShips() {
-    srand(time(nullptr));
+    std::random_device rd;
+    std::mt19937 gen(rd());
     for (int i = 3; i >= 0; --i) {
         for (int j = shipCount[i]; j < shipAvailable[i]; ++j) {
             bool ok = false;
             while (!ok) {
                 int s1, s2, dir;
-                s1 = rand() % (10 - i);
-                s2 = rand() % (10 - i);
-                dir = rand() % 2;
+                std::uniform_int_distribution<> dis1(0, 10 - i - 1);
+                std::uniform_int_distribution<> dis2(0, 1);
+                s1 = dis1(gen);
+                s2 = dis1(gen);
+                dir = dis2(gen) % 2;
                 std::string start, end;
                 start += (char)(s1 + 'a');
                 start += (char)(s2 + '0');
@@ -198,14 +208,17 @@ void Gamer::randomSetShips() {
 }
 
 void Gamer::smartSetShips() {
-    srand(time(nullptr));
+    std::random_device rd;
+    std::mt19937 gen(rd());
     for (int i = 3; i > 0; --i) {
         for (int j = shipCount[i]; j < shipAvailable[i]; ++j) {
             bool ok = false;
             while (!ok) {
                 int s1, s2;
-                s1 = rand() % 4;
-                s2 = rand() % (10 - i);
+                std::uniform_int_distribution<> dis1(0, 3);
+                std::uniform_int_distribution<> dis2(0, 10 - i - 1);
+                s1 = dis1(gen);
+                s2 = dis2(gen);
                 std::string start, end;
                 if (s1 == 0) {
                     start += 'a';
@@ -242,8 +255,9 @@ void Gamer::smartSetShips() {
         bool ok = false;
         while (!ok) {
             int s1, s2;
-            s1 = rand() % 10;
-            s2 = rand() % 10;
+            std::uniform_int_distribution<> dis(0, 9);
+            s1 = dis(gen);
+            s2 = dis(gen);
             std::string start;
             start += (char)(s1 + 'a');
             start += (char)(s2 + '0');
@@ -255,7 +269,7 @@ void Gamer::smartSetShips() {
     }
 }
 
-std::vector <std::pair <int, int>> Gamer::getShipByCoord(std::pair<int, int> coords) {
+std::vector <std::pair <int, int>> Gamer::getShipByCoord(std::pair<int, int> coords) const {
     for (auto &i : ships) {
         for (auto &j : i) {
             if (j == coords) {
@@ -263,15 +277,15 @@ std::vector <std::pair <int, int>> Gamer::getShipByCoord(std::pair<int, int> coo
             }
         }
     }
-    return std::vector<std::pair<int, int>>();
+    return std::vector<std::pair<int, int>>(0);
 }
 
+int Gamer::shot(std::string s, int* sx, int* sy) {
 /*
 -1 - некорректный ввод
 0 - промах
 1 - попал
 */
-int Gamer::shot(std::string s, int* sx, int* sy) {
     int y = s[0] - 'a' + 1;
     int x = s[1] - '0' + 1;
     if (x < 1 || x > 10 || y < 1 || y > 10) {
@@ -298,6 +312,7 @@ int Gamer::shot(std::string s, int* sx, int* sy) {
     if (!killed) {
         return 1;
     }
+
     markKilledShipNeighbours(ship);
     for (auto &i : ship) {
         field[i.first][i.second] = 4;
